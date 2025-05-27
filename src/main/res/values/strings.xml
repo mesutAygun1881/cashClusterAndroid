@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CashCluster</string>
+    <string name="onboarding_title_1">Cluster</string>
+    <string name="onboarding_desc_1">Koleksiyonunu gruplandır ve yönet!</string>
+    <string name="onboarding_title_2">Photo</string>
+    <string name="onboarding_desc_2">Koleksiyonuna fotoğraf ekle!</string>
+    <string name="onboarding_title_3">Filters</string>
+    <string name="onboarding_desc_3">Filtrelerle aradığını kolayca bul!</string>
+    <string name="onboarding_title_4">Start collect!</string>
+    <string name="onboarding_desc_4">Koleksiyonculuğa hemen başla!</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="skip">Skip onboarding</string>
+    <string name="start_collect">Başla</string>
+</resources>
