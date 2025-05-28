@@ -4,6 +4,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import com.cashcluster.collect.data.Category
 import com.cashcluster.collect.data.CategoryStorage
 import kotlinx.coroutines.launch
+import com.cashcluster.collect.data.Item
+import com.cashcluster.collect.data.ItemStorage
 
 enum class CollectionCategory {
     Coins,
@@ -37,6 +40,7 @@ enum class CollectionCategory {
 fun ClustersScreen() {
     val context = LocalContext.current
     val categoryStorage = remember { CategoryStorage(context) }
+    val itemStorage = remember { ItemStorage(context) }
 
     // Kategorileri yükle veya varsayılanları oluştur
     var categories by remember {
@@ -55,6 +59,11 @@ fun ClustersScreen() {
 
     var selectedCategory by remember { mutableStateOf(categories.firstOrNull()) }
     var showNewCategorySheet by remember { mutableStateOf(false) }
+    var showNewItemSheet by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf<Item?>(null) }
+
+    // Itemları yükle
+    var items by remember { mutableStateOf(itemStorage.loadItems()) }
 
     // Varsayılan kategoriler için enum yerine Category objesi kullanıyoruz.
     // Bu kısım UI güncellemesi için tutulabilir, veya doğrudan categories listesi kullanılabilir.
@@ -150,32 +159,84 @@ fun ClustersScreen() {
                         .weight(1f)
                         .padding(top = 16.dp)
                 ) {
-                    val currentCategory = selectedCategory // Yerel değişkene ata
-                    if (currentCategory != null) { // Tekrar null kontrolü yap (derleyici için)
+                    val currentCategory = selectedCategory
+                    if (currentCategory != null) {
                         Text(
-                            "Kategori İçeriği: ${currentCategory.name}", // Yerel değişkeni kullan
+                            "${currentCategory.name} Items",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
+
+                        // Seçili kategoriye ait itemları filtrele ve listele
+                        val categoryItems = items.filter { it.categoryName == currentCategory.name }
+
+                        if (categoryItems.isEmpty()) {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "No items in ${currentCategory.name} yet.",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 32.dp)
+                                )
+                            }
+                        } else {
+                            LazyColumn {
+                                items(categoryItems) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clickable { selectedItem = it },
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                    ) {
+                                        Text(
+                                            text = it.name,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
-                    // TODO: Burada seçili kategorinin öğeleri listelenecek
                 }
             }
         }
 
         Button(
-            onClick = { /* Add New Item tıklama */ },
+            onClick = {
+                if (selectedCategory != null) {
+                    showNewItemSheet = true
+                } else {
+                    // Kategori seçili değilse uyarı gösterilebilir veya buton disable edilebilir.
+                    // Şimdilik hiçbir şey yapmıyoruz.
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(24.dp),
+            enabled = selectedCategory != null
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                  Icon(Icons.Filled.Add, contentDescription = "Add new item", tint = Color.White)
                  Text("Add new item", color = Color.White)
             }
         }
+    }
+
+    // Item Detay Sheet
+    if (selectedItem != null) {
+        ItemDetailSheet(
+            item = selectedItem!!,
+            onDismiss = { selectedItem = null }
+        )
     }
 
     // Yeni Kategori Sheet
@@ -191,14 +252,33 @@ fun ClustersScreen() {
                      }
                  },
                  onCategoryCreated = { newCategory ->
-                    categories = categories + newCategory // Yeni kategoriyi listeye ekle
-                    categoryStorage.saveCategories(categories) // Kategorileri kaydet
-                    selectedCategory = newCategory // Yeni kategoriyi seçili yap
+                    categories = categories + newCategory
+                    categoryStorage.saveCategories(categories)
+                    selectedCategory = newCategory
                     coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) { showNewCategorySheet = false }
                     }
                  }
              )
+        }
+    }
+
+    // Yeni Item Sheet
+    if (showNewItemSheet && selectedCategory != null) {
+        val currentCategory = selectedCategory
+        ModalBottomSheet(
+            onDismissRequest = { showNewItemSheet = false },
+            sheetState = sheetState
+        ) {
+            NewItemSheet(
+                categoryName = currentCategory!!.name,
+                onDismiss = { showNewItemSheet = false },
+                onItemCreated = { newItem ->
+                    items = items + newItem
+                    itemStorage.saveItems(items)
+                    showNewItemSheet = false
+                }
+            )
         }
     }
 }
