@@ -23,6 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
+import coil.compose.rememberAsyncImagePainter
 import com.cashcluster.collect.data.Category
 import com.cashcluster.collect.data.CategoryStorage
 import kotlinx.coroutines.launch
@@ -47,8 +51,8 @@ fun ClustersScreen() {
         val loadedCategories = categoryStorage.loadCategories()
         if (loadedCategories.isEmpty()) {
             val defaultCategories = listOf(
-                Category("Coins", listOf("Name", "Year of foundation")),
-                Category("Banknotes", listOf("Name", "Year of foundation"))
+                Category("Coins", listOf("Name", "Year of foundation", "Collection", "Country")),
+                Category("Banknotes", listOf("Name", "Year of foundation", "Collection", "Country"))
             )
             categoryStorage.saveCategories(defaultCategories)
             mutableStateOf(defaultCategories)
@@ -187,18 +191,56 @@ fun ClustersScreen() {
                             }
                         } else {
                             LazyColumn {
-                                items(categoryItems) {
-                                    Card(
+                                items(categoryItems.chunked(2)) { rowItems ->
+                                    Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                            .clickable { selectedItem = it },
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                            .padding(vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Text(
-                                            text = it.name,
-                                            modifier = Modifier.padding(16.dp)
-                                        )
+                                        rowItems.forEach { item ->
+                                            Card(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .aspectRatio(1f)
+                                                    .clickable { selectedItem = item },
+                                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                ) {
+                                                    if (item.imageUris.isNotEmpty()) {
+                                                        val imagePainter = rememberAsyncImagePainter("file://${item.imageUris.first()}")
+                                                        Image(
+                                                            painter = imagePainter,
+                                                            contentDescription = item.name,
+                                                            modifier = Modifier
+                                                                .fillMaxSize()
+                                                                .clip(RoundedCornerShape(8.dp)),
+                                                            contentScale = ContentScale.Crop
+                                                        )
+                                                    }
+
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .align(Alignment.BottomStart)
+                                                            .background(Color(0xAA000000))
+                                                            .padding(8.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = item.name,
+                                                            color = Color.White,
+                                                            style = MaterialTheme.typography.bodyMedium
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (rowItems.size < 2) {
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
                                     }
                                 }
                             }
@@ -225,8 +267,8 @@ fun ClustersScreen() {
             enabled = selectedCategory != null
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                 Icon(Icons.Filled.Add, contentDescription = "Add new item", tint = Color.White)
-                 Text("Add new item", color = Color.White)
+                Icon(Icons.Filled.Add, contentDescription = "Add new item", tint = Color.White)
+                Text("Add new item", color = Color.White)
             }
         }
     }
@@ -245,21 +287,21 @@ fun ClustersScreen() {
             onDismissRequest = { showNewCategorySheet = false },
             sheetState = sheetState
         ) {
-             NewCategorySheet(
-                 onDismiss = {
-                     coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
-                         if (!sheetState.isVisible) { showNewCategorySheet = false }
-                     }
-                 },
-                 onCategoryCreated = { newCategory ->
+            NewCategorySheet(
+                onDismiss = {
+                    coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) { showNewCategorySheet = false }
+                    }
+                },
+                onCategoryCreated = { newCategory ->
                     categories = categories + newCategory
                     categoryStorage.saveCategories(categories)
                     selectedCategory = newCategory
                     coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) { showNewCategorySheet = false }
                     }
-                 }
-             )
+                }
+            )
         }
     }
 
@@ -272,6 +314,7 @@ fun ClustersScreen() {
         ) {
             NewItemSheet(
                 categoryName = currentCategory!!.name,
+                categoryFields = currentCategory.fields,
                 onDismiss = { showNewItemSheet = false },
                 onItemCreated = { newItem ->
                     items = items + newItem
@@ -287,4 +330,4 @@ fun ClustersScreen() {
 @Composable
 fun PreviewClustersScreen() {
     ClustersScreen()
-} 
+}

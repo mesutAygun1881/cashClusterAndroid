@@ -1,5 +1,6 @@
 package com.cashcluster.collect.ui
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,7 +32,12 @@ fun NewCategorySheet(
     onCategoryCreated: (Category) -> Unit
 ) {
     var categoryName by remember { mutableStateOf<String>("") }
-    val defaultFields = remember { mutableStateListOf("Name", "Year of foundation") }
+    val defaultFields = remember {
+        mutableStateListOf<String>().apply {
+            add("Name")
+            add("Year of foundation")
+        }
+    }
     val customFields = remember { mutableStateListOf<String>() }
     var newFieldName by remember { mutableStateOf<String>("") }
     var showNewFieldInput by remember { mutableStateOf<Boolean>(false) }
@@ -186,9 +192,15 @@ fun NewCategorySheet(
                     Button(
                         onClick = {
                             if (categoryName.isNotBlank()) {
+                                val lowerCaseCategory = categoryName.trim().lowercase()
+                                val combinedFields = if (lowerCaseCategory == "coins" || lowerCaseCategory == "banknotes") {
+                                    listOf("Name", "Year of foundation", "Collection", "Country")
+                                } else {
+                                    defaultFields.toList() + customFields.toList()
+                                }
                                 val newCategory = Category(
                                     categoryName,
-                                    defaultFields.toList() + customFields.toList()
+                                    combinedFields
                                 )
                                 onCategoryCreated(newCategory)
                             }

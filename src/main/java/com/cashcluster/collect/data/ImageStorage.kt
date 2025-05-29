@@ -15,14 +15,14 @@ class ImageStorage(private val context: Context) {
     fun saveImage(uri: Uri): String {
         val inputStream = context.contentResolver.openInputStream(uri)
         val bitmap = BitmapFactory.decodeStream(inputStream)
-        
+
         val fileName = "${UUID.randomUUID()}.jpg"
         val file = File(imagesDir, fileName)
-        
+
         FileOutputStream(file).use { out ->
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
         }
-        
+
         return file.absolutePath
     }
 

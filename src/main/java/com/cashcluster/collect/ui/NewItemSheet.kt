@@ -1,4 +1,3 @@
-
 package com.cashcluster.collect.ui
 
 import android.Manifest
@@ -40,13 +39,13 @@ import coil.compose.rememberAsyncImagePainter
 fun NewItemSheet(
     categoryName: String, // Hangi kategoriye item eklendiğini bilmek için
     onDismiss: () -> Unit,
-    onItemCreated: (Item) -> Unit
+    onItemCreated: (Item) -> Unit,
+    categoryFields: List<String>
 ) {
-    var name by remember { mutableStateOf("") }
-    var yearOfFoundation by remember { mutableStateOf("") }
-    var collection by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("") }
-    // Görsel ekleme placeholderları için state'ler eklenecek
+    // Dynamic field states
+    val fieldStates = remember {
+        categoryFields.associateWith { mutableStateOf("") }.toMutableMap()
+    }
     var imageUris by remember { mutableStateOf(emptyList<String>()) } // Şimdilik string listesi
 
     val context = LocalContext.current
@@ -125,56 +124,36 @@ fun NewItemSheet(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Metin giriş alanları
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("*Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-            OutlinedTextField(
-                value = yearOfFoundation,
-                onValueChange = { yearOfFoundation = it },
-                label = { Text("Year of foundation") },
-                // Takvim ikonu eklenecek
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-            OutlinedTextField(
-                value = collection,
-                onValueChange = { collection = it },
-                label = { Text("Collection") }, // Görselde yok ama istendi
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-            OutlinedTextField(
-                value = country,
-                onValueChange = { country = it },
-                label = { Text("Country") }, // Görselde yok ama istendi
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
+            // Dynamic text fields based on categoryFields
+            categoryFields.forEach { field ->
+                val state = fieldStates[field]!!
+                OutlinedTextField(
+                    value = state.value,
+                    onValueChange = { state.value = it },
+                    label = { Text(field) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
 
             // Add new item butonu
+            val nameInput = fieldStates["Name"]?.value.orEmpty()
             Button(
                 onClick = {
-                    if (name.isNotBlank()) {
+                    if (nameInput.isNotBlank()) {
+                        val customFields = fieldStates.filterKeys {
+                            it != "Name" && it != "Year of foundation" && it != "Collection" && it != "Country"
+                        }.mapValues { it.value.value }
                         val newItem = Item(
-                            name = name,
-                            yearOfFoundation = yearOfFoundation.ifBlank { null },
-                            collection = collection.ifBlank { null },
-                            country = country.ifBlank { null },
+                            name = nameInput,
+                            yearOfFoundation = fieldStates["Year of foundation"]?.value?.ifBlank { null },
+                            collection = fieldStates["Collection"]?.value?.ifBlank { null },
+                            country = fieldStates["Country"]?.value?.ifBlank { null },
                             categoryName = categoryName,
-                            imageUris = imageUris // Şimdilik boş listeyi veriyoruz
+                            imageUris = imageUris,
+                            customFields = customFields
                         )
                         onItemCreated(newItem)
                         onDismiss()
@@ -187,7 +166,7 @@ fun NewItemSheet(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = androidx.compose.ui.graphics.Color(0xFFD3E0F1) // Açık mavi gri tonu
                 ),
-                enabled = name.isNotBlank() // İsim boş değilse aktif
+                enabled = nameInput.isNotBlank() // İsim boş değilse aktif
             ) {
                 Text("Add new item", color = androidx.compose.ui.graphics.Color(0xFF1D3D98)) // Koyu mavi yazı
             }
@@ -206,12 +185,3 @@ fun NewItemSheet(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewNewItemSheet() {
-    NewItemSheet(
-        categoryName = "Coins",
-        onDismiss = {},
-        onItemCreated = {}
-    )
-}
