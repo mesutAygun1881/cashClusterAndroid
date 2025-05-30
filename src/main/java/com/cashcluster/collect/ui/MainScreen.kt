@@ -42,14 +42,16 @@ fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = Color(0xFF1D3D98) // İstediğin mavi tonu
+            ) {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = { Icon(item.icon, contentDescription = item.title) },
                         label = { Text(item.title) },
                         selected = selectedItem == index,
                         onClick = { selectedItem = index },
-                        colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.Red, unselectedIconColor = Color.Red, selectedTextColor = Color.Red, unselectedTextColor = Color.Red)
+                        colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.White, unselectedIconColor = Color.Gray, selectedTextColor = Color.White, unselectedTextColor = Color.Gray)
                     )
                 }
             }

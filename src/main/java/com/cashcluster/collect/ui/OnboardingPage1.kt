@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -30,15 +32,20 @@ import androidx.compose.ui.graphics.toArgb
 
 @Composable
 fun OnboardingPage1(onContinue: () -> Unit, onSkip: () -> Unit) {
+    val scrollState = rememberScrollState()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF1D3D98)) // Arka plan rengi
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .verticalScroll(scrollState)
+                .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween // İçeriği dikeyde yay
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Üst Kısım: Başlık
             Text(
@@ -57,7 +64,7 @@ fun OnboardingPage1(onContinue: () -> Unit, onSkip: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f) // Kalan dikey alanı doldur olarak geri alındı
-                    // .padding(vertical = 16.dp) // Dikey boşluk kaldırıldı
+                // .padding(vertical = 16.dp) // Dikey boşluk kaldırıldı
             )
 
             // Alt Kısım: Butonlar

@@ -16,11 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cashcluster.collect.R
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 @Composable
 fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Unit) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val whiteAreaHeight = screenHeight * 0.35f
+    val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Üst beyaz alan
@@ -43,7 +46,11 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .padding(horizontal = 24.dp, vertical = 10.dp)
+                .verticalScroll(scrollState)
+                .padding(bottom = 10.dp)
+                .padding(top = 30.dp)
+            ,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -69,7 +76,7 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
+                    .padding(horizontal = 32.dp, vertical = 10.dp)
             ) {
                 Text(
                     text = "Photo",
@@ -87,21 +94,24 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
 
             // Butonlar
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 8.dp), // Yan ve alt boşluk
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp) // Butonlar arasına boşluk
             ) {
                 Button(
                     onClick = onContinue,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)) // Kırmızı arka plan
                 ) {
                     Text("Continue", color = Color.White)
                 }
 
-                TextButton(onClick = onSkip) {
+                TextButton(
+                    onClick = onSkip,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                ) {
                     Text("Skip onboarding", color = Color.White)
                 }
             }

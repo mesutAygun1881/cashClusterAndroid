@@ -37,16 +37,20 @@ import coil.compose.rememberAsyncImagePainter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewItemSheet(
-    categoryName: String, // Hangi kategoriye item eklendiğini bilmek için
+    categoryName: String,
     onDismiss: () -> Unit,
     onItemCreated: (Item) -> Unit,
     categoryFields: List<String>
 ) {
     // Dynamic field states
     val fieldStates = remember {
-        categoryFields.associateWith { mutableStateOf("") }.toMutableMap()
+        val fields = when (categoryName.lowercase()) {
+            "coins", "banknotes" -> listOf("Name", "Year of foundation", "Collection", "Country")
+            else -> categoryFields
+        }
+        fields.associateWith { mutableStateOf("") }.toMutableMap()
     }
-    var imageUris by remember { mutableStateOf(emptyList<String>()) } // Şimdilik string listesi
+    var imageUris by remember { mutableStateOf(emptyList<String>()) }
 
     val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -125,7 +129,12 @@ fun NewItemSheet(
             )
 
             // Dynamic text fields based on categoryFields
-            categoryFields.forEach { field ->
+            val displayFields = when (categoryName.lowercase()) {
+                "coins", "banknotes" -> listOf("Name", "Year of foundation", "Collection", "Country")
+                else -> categoryFields
+            }
+            
+            displayFields.forEach { field ->
                 val state = fieldStates[field]!!
                 OutlinedTextField(
                     value = state.value,
@@ -144,7 +153,7 @@ fun NewItemSheet(
                 onClick = {
                     if (nameInput.isNotBlank()) {
                         val customFields = fieldStates.filterKeys {
-                            it != "Name" && it != "Year of foundation" && it != "Collection" && it != "Country"
+                            it != "Name" && it != "Year of foundation"
                         }.mapValues { it.value.value }
                         val newItem = Item(
                             name = nameInput,
@@ -164,16 +173,15 @@ fun NewItemSheet(
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = androidx.compose.ui.graphics.Color(0xFFD3E0F1) // Açık mavi gri tonu
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFD3E0F1)
                 ),
-                enabled = nameInput.isNotBlank() // İsim boş değilse aktif
+                enabled = nameInput.isNotBlank()
             ) {
-                Text("Add new item", color = androidx.compose.ui.graphics.Color(0xFF1D3D98)) // Koyu mavi yazı
+                Text("Add new item", color = androidx.compose.ui.graphics.Color(0xFF1D3D98))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Cancel, back butonu
             TextButton(
                 onClick = onDismiss,
                 modifier = Modifier.align(Alignment.CenterHorizontally)

@@ -177,19 +177,30 @@ fun ClustersScreen() {
 
                         if (categoryItems.isEmpty()) {
                             Column(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
+                                // Büyük X ikonu
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .border(2.dp, Color.Gray, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("X", fontSize = 40.sp, color = Color.Gray)
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "No items in ${currentCategory.name} yet.",
+                                    text = "There are no items in this section of your collection yet. They will appear here when you add them.",
                                     fontSize = 16.sp,
                                     color = Color.Gray,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(horizontal = 32.dp)
                                 )
                             }
-                        } else {
+                        }else {
                             LazyColumn {
                                 items(categoryItems.chunked(2)) { rowItems ->
                                     Row(

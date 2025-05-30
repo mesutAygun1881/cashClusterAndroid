@@ -87,8 +87,7 @@ fun ItemDetailSheet(
                 ) {
                     DetailRow("Name", item.name)
                     DetailRow("Year of foundation", item.yearOfFoundation)
-                    DetailRow("Collection", item.collection)
-                    DetailRow("Country", item.country)
+
 
                     // Custom fields
                     item.customFields.forEach { (label, value) ->
