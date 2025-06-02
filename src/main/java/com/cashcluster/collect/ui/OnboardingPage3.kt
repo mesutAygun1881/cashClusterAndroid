@@ -16,14 +16,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cashcluster.collect.R
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 
 @Composable
 fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Unit) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val whiteAreaHeight = screenHeight * 0.35f
-    val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Üst beyaz alan
@@ -46,20 +43,24 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 10.dp)
-                .verticalScroll(scrollState)
-                .padding(bottom = 10.dp)
-                .padding(top = 30.dp)
-            ,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Geri butonu
-            TextButton(
-                onClick = onBack,
-                modifier = Modifier.align(Alignment.Start)
+            // Back butonu offset ile aşağıda
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = 30.dp)
+                    .padding(top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Back", color = Color.Black)
+                TextButton(
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Text("Back", color = Color.Black)
+                }
             }
 
             // Görsel (mockup)
@@ -72,11 +73,12 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
                     .clip(RoundedCornerShape(28.dp))
             )
 
-            // Başlık ve açıklama hizalı
+            // Başlık ve açıklama sola yaslı
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 10.dp)
+                    .padding(top = 12.dp, bottom = 16.dp),
+                horizontalAlignment = Alignment.Start
             ) {
                 Text(
                     text = "Photo",
@@ -88,29 +90,37 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
                     text = "Add new exhibits and build to your collections",
                     fontSize = 14.sp,
                     color = Color.White,
-                    lineHeight = 18.sp
+                    lineHeight = 18.sp,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             // Butonlar
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 8.dp), // Yan ve alt boşluk
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp) // Butonlar arasına boşluk
+                    .navigationBarsPadding()
+                    .padding(bottom = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
                     onClick = onContinue,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)) // Kırmızı arka plan
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
                 ) {
                     Text("Continue", color = Color.White)
                 }
 
                 TextButton(
                     onClick = onSkip,
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
                 ) {
                     Text("Skip onboarding", color = Color.White)
                 }

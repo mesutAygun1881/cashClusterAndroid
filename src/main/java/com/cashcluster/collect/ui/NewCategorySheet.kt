@@ -42,181 +42,179 @@ fun NewCategorySheet(
     var newFieldName by remember { mutableStateOf<String>("") }
     var showNewFieldInput by remember { mutableStateOf<Boolean>(false) }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, modifier = Modifier.fillMaxHeight(0.9f)) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(horizontal = 16.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = "New Category",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        }
+
+        item {
+            OutlinedTextField(
+                value = categoryName,
+                onValueChange = { categoryName = it },
+                label = { Text("Category Name") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+        }
+
+        item {
+            Text(
+                text = "Default Fields",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1D3D98)
+            )
+        }
+
+        items(defaultFields) { field ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+            ) {
                 Text(
-                    text = "New Category",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 16.dp)
+                    text = field,
+                    modifier = Modifier.padding(16.dp),
+                    color = Color.Gray
                 )
             }
+        }
 
-            item {
-                OutlinedTextField(
-                    value = categoryName,
-                    onValueChange = { categoryName = it },
-                    label = { Text("Category Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
+        item {
+            Text(
+                text = "Custom Fields",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1D3D98),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
 
-            item {
-                Text(
-                    text = "Default Fields",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D3D98)
-                )
-            }
-
-            items(defaultFields) { field ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+        items(customFields) { field ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = field,
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Gray
-                    )
-                }
-            }
-
-            item {
-                Text(
-                    text = "Custom Fields",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D3D98),
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            items(customFields) { field ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Text(text = field)
+                    IconButton(
+                        onClick = { customFields.remove(field) }
                     ) {
-                        Text(text = field)
-                        IconButton(
-                            onClick = { customFields.remove(field) }
-                        ) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete field",
-                                tint = Color.Red
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (showNewFieldInput) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = newFieldName,
-                            onValueChange = { newFieldName = it },
-                            label = { Text("New Field Name") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete field",
+                            tint = Color.Red
                         )
-                        IconButton(
-                            onClick = {
-                                if (newFieldName.isNotBlank()) {
-                                    customFields.add(newFieldName)
-                                    newFieldName = ""
-                                    showNewFieldInput = false
-                                }
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add field",
-                                tint = Color(0xFF1D3D98)
-                            )
-                        }
                     }
                 }
             }
+        }
 
-            item {
-                TextButton(
-                    onClick = { showNewFieldInput = true },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add new field")
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add new field", color = Color(0xFF1D3D98))
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
+        if (showNewFieldInput) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
+                    OutlinedTextField(
+                        value = newFieldName,
+                        onValueChange = { newFieldName = it },
+                        label = { Text("New Field Name") },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1D3D98))
-                    ) {
-                        Text("Cancel")
-                    }
-
-                    Button(
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    IconButton(
                         onClick = {
-                            if (categoryName.isNotBlank()) {
-                                val lowerCaseCategory = categoryName.trim().lowercase()
-                                val combinedFields = if (lowerCaseCategory == "coins" || lowerCaseCategory == "banknotes") {
-                                    listOf("Name", "Year of foundation", "Collection", "Country")
-                                } else {
-                                    defaultFields.toList() + customFields.toList()
-                                }
-                                val newCategory = Category(
-                                    categoryName,
-                                    combinedFields
-                                )
-                                onCategoryCreated(newCategory)
+                            if (newFieldName.isNotBlank()) {
+                                customFields.add(newFieldName)
+                                newFieldName = ""
+                                showNewFieldInput = false
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D3D98))
+                        }
                     ) {
-                        Text("Create Category", color = Color.White)
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Add field",
+                            tint = Color(0xFF1D3D98)
+                        )
                     }
                 }
             }
+        }
 
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
+        item {
+            TextButton(
+                onClick = { showNewFieldInput = true }
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add new field")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Add new field", color = Color(0xFF1D3D98))
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1D3D98))
+                ) {
+                    Text("Cancel")
+                }
+
+                Button(
+                    onClick = {
+                        if (categoryName.isNotBlank()) {
+                            val lowerCaseCategory = categoryName.trim().lowercase()
+                            val combinedFields = if (lowerCaseCategory == "coins" || lowerCaseCategory == "banknotes") {
+                                listOf("Name", "Year of foundation", "Collection", "Country")
+                            } else {
+                                defaultFields.toList() + customFields.toList()
+                            }
+                            val newCategory = Category(
+                                categoryName,
+                                combinedFields
+                            )
+                            onCategoryCreated(newCategory)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D3D98))
+                ) {
+                    Text("Create Category", color = Color.White)
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

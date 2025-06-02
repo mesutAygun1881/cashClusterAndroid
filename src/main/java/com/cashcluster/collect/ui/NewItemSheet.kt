@@ -71,125 +71,124 @@ fun NewItemSheet(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .navigationBarsPadding()
-        ) {
-            Text(
-                text = "New item",
-                fontSize = 24.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(16.dp)
+            .navigationBarsPadding()
+    ) {
+        Text(
+            text = "New item",
+            fontSize = 24.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-            // Görsel ekleme placeholderları
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                repeat(3) { index ->
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .background(color = androidx.compose.ui.graphics.Color.LightGray, shape = RoundedCornerShape(8.dp))
-                            .border(1.dp, androidx.compose.ui.graphics.Color.Gray, RoundedCornerShape(8.dp))
-                            .clickable {
-                                imagePickerLauncher.launch("image/*")
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (index < imageUris.size) {
-                            val imageUri = imageUris[index]
-                            val painter = rememberAsyncImagePainter(model = "file://$imageUri")
-                            Image(
-                                painter = painter,
-                                contentDescription = "Selected image",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(8.dp))
-                            )
-                        } else {
-                            Icon(Icons.Default.Add, contentDescription = "Add image", tint = androidx.compose.ui.graphics.Color.Gray)
-                        }
+        // Görsel ekleme placeholderları
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            repeat(3) { index ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .background(color = androidx.compose.ui.graphics.Color.LightGray, shape = RoundedCornerShape(8.dp))
+                        .border(1.dp, androidx.compose.ui.graphics.Color.Gray, RoundedCornerShape(8.dp))
+                        .clickable {
+                            imagePickerLauncher.launch("image/*")
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (index < imageUris.size) {
+                        val imageUri = imageUris[index]
+                        val painter = rememberAsyncImagePainter(model = "file://$imageUri")
+                        Image(
+                            painter = painter,
+                            contentDescription = "Selected image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp))
+                        )
+                    } else {
+                        Icon(Icons.Default.Add, contentDescription = "Add image", tint = androidx.compose.ui.graphics.Color.Gray)
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Collection elements for items",
-                fontSize = 18.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+        Text(
+            text = "Collection elements for items",
+            fontSize = 18.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-            // Dynamic text fields based on categoryFields
-            val displayFields = when (categoryName.lowercase()) {
-                "coins", "banknotes" -> listOf("Name", "Year of foundation", "Collection", "Country")
-                else -> categoryFields
-            }
-            
-            displayFields.forEach { field ->
-                val state = fieldStates[field]!!
-                OutlinedTextField(
-                    value = state.value,
-                    onValueChange = { state.value = it },
-                    label = { Text(field) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-
-            // Add new item butonu
-            val nameInput = fieldStates["Name"]?.value.orEmpty()
-            Button(
-                onClick = {
-                    if (nameInput.isNotBlank()) {
-                        val customFields = fieldStates.filterKeys {
-                            it != "Name" && it != "Year of foundation"
-                        }.mapValues { it.value.value }
-                        val newItem = Item(
-                            name = nameInput,
-                            yearOfFoundation = fieldStates["Year of foundation"]?.value?.ifBlank { null },
-                            collection = fieldStates["Collection"]?.value?.ifBlank { null },
-                            country = fieldStates["Country"]?.value?.ifBlank { null },
-                            categoryName = categoryName,
-                            imageUris = imageUris,
-                            customFields = customFields
-                        )
-                        onItemCreated(newItem)
-                        onDismiss()
-                    }
-                },
+        // Dynamic text fields based on categoryFields
+        val displayFields = when (categoryName.lowercase()) {
+            "coins", "banknotes" -> listOf("Name", "Year of foundation", "Collection", "Country")
+            else -> categoryFields
+        }
+        
+        displayFields.forEach { field ->
+            val state = fieldStates[field]!!
+            OutlinedTextField(
+                value = state.value,
+                onValueChange = { state.value = it },
+                label = { Text(field) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = androidx.compose.ui.graphics.Color(0xFFD3E0F1)
-                ),
-                enabled = nameInput.isNotBlank()
-            ) {
-                Text("Add new item", color = androidx.compose.ui.graphics.Color(0xFF1D3D98))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("Cancel, back", color = androidx.compose.ui.graphics.Color.Gray)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(12.dp)
+            )
         }
+
+        // Add new item butonu
+        val nameInput = fieldStates["Name"]?.value.orEmpty()
+        Button(
+            onClick = {
+                if (nameInput.isNotBlank()) {
+                    val customFields = fieldStates.filterKeys {
+                        it != "Name" && it != "Year of foundation"
+                    }.mapValues { it.value.value }
+                    val newItem = Item(
+                        name = nameInput,
+                        yearOfFoundation = fieldStates["Year of foundation"]?.value?.ifBlank { null },
+                        collection = fieldStates["Collection"]?.value?.ifBlank { null },
+                        country = fieldStates["Country"]?.value?.ifBlank { null },
+                        categoryName = categoryName,
+                        imageUris = imageUris,
+                        customFields = customFields
+                    )
+                    onItemCreated(newItem)
+                    onDismiss()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.ui.graphics.Color(0xFFD3E0F1)
+            ),
+            enabled = nameInput.isNotBlank()
+        ) {
+            Text("Add new item", color = androidx.compose.ui.graphics.Color(0xFF1D3D98))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Cancel, back", color = androidx.compose.ui.graphics.Color.Gray)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

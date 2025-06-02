@@ -73,7 +73,7 @@ fun ClustersScreen() {
     // Bu kısım UI güncellemesi için tutulabilir, veya doğrudan categories listesi kullanılabilir.
     // Şimdilik selectedCategory Category tipinde tutulacak.
 
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
 
     Box(
@@ -288,7 +288,17 @@ fun ClustersScreen() {
     if (selectedItem != null) {
         ItemDetailSheet(
             item = selectedItem!!,
-            onDismiss = { selectedItem = null }
+            onDismiss = { selectedItem = null },
+            onNameUpdate = { newName ->
+                items = items.map { if (it == selectedItem) it.copy(name = newName) else it }
+                itemStorage.saveItems(items)
+                selectedItem = selectedItem?.copy(name = newName)
+            },
+            onDelete = {
+                items = items.filter { it != selectedItem }
+                itemStorage.saveItems(items)
+                selectedItem = null // Sheet'i kapat
+            }
         )
     }
 
@@ -333,6 +343,11 @@ fun ClustersScreen() {
                     showNewItemSheet = false
                 }
             )
+        }
+        LaunchedEffect(showNewItemSheet) {
+            if (showNewItemSheet) {
+                sheetState.expand()
+            }
         }
     }
 }

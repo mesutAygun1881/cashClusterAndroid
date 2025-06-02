@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,7 +22,10 @@ import com.cashcluster.collect.data.Category
 import com.cashcluster.collect.data.CategoryStorage
 import com.cashcluster.collect.data.Item
 import com.cashcluster.collect.data.ItemStorage
-
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import coil.compose.rememberAsyncImagePainter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterScreen() {
@@ -221,18 +225,57 @@ fun FilterScreen() {
                 if (filteredItems!!.isEmpty()) {
                     Text("No items found.")
                 } else {
-                    filteredItems!!.forEach { item ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable { selectedItem = item },
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                        ) {
-                            Text(
-                                text = item.name,
-                                modifier = Modifier.padding(16.dp)
-                            )
+                    // ClusterScreen'deki gibi grid
+                    LazyColumn {
+                        items(filteredItems!!.chunked(2)) { rowItems ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowItems.forEach { item ->
+                                    Card(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(1f)
+                                            .clickable { selectedItem = item },
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            if (item.imageUris.isNotEmpty()) {
+                                                val imagePainter = rememberAsyncImagePainter("file://${item.imageUris.first()}")
+                                                Image(
+                                                    painter = imagePainter,
+                                                    contentDescription = item.name,
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .clip(RoundedCornerShape(8.dp)),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .align(Alignment.BottomStart)
+                                                    .background(Color(0xAA000000))
+                                                    .padding(8.dp)
+                                            ) {
+                                                Text(
+                                                    text = item.name,
+                                                    color = Color.White,
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                if (rowItems.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
@@ -244,7 +287,21 @@ fun FilterScreen() {
     if (selectedItem != null) {
         ItemDetailSheet(
             item = selectedItem!!,
-            onDismiss = { selectedItem = null }
+            onDismiss = { selectedItem = null },
+            onNameUpdate = { newName ->
+                // Hem items hem filteredItems güncellenmeli
+                filteredItems = filteredItems?.map { if (it == selectedItem) it.copy(name = newName) else it }
+                val newItems = items.map { if (it == selectedItem) it.copy(name = newName) else it }
+                itemStorage.saveItems(newItems)
+                selectedItem = selectedItem?.copy(name = newName)
+            },
+            onDelete = {
+                // Silme işlemi: hem items hem filteredItems listesinden çıkar
+                filteredItems = filteredItems?.filter { it != selectedItem }
+                val newItems = items.filter { it != selectedItem }
+                itemStorage.saveItems(newItems)
+                selectedItem = null
+            }
         )
     }
 } 
