@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cashcluster.collect.R
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Unit) {
@@ -44,7 +46,8 @@ fun OnboardingPage3(onContinue: () -> Unit, onSkip: () -> Unit, onBack: () -> Un
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Back butonu offset ile aşağıda

@@ -12,7 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.cashcluster.collect.R
 import androidx.compose.foundation.layout.size
-
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
 @Composable
 fun SplashScreen() {
     Box(
@@ -24,7 +25,9 @@ fun SplashScreen() {
         Image(
             painter = painterResource(id = R.drawable.logocash),
             contentDescription = "Logo",
-            modifier = Modifier.size(160.dp)
+            modifier = Modifier
+                .size(160.dp)
+                .clip(RoundedCornerShape(20.dp)) // 🎯 Köşe yuvarlama burada
         )
     }
 } 

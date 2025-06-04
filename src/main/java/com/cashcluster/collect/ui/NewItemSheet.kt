@@ -33,6 +33,8 @@ import com.cashcluster.collect.data.Item // Item data class'ını import ediyoru
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
 import coil.compose.rememberAsyncImagePainter
+import androidx.core.content.FileProvider
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,21 +55,58 @@ fun NewItemSheet(
     var imageUris by remember { mutableStateOf(emptyList<String>()) }
 
     val context = LocalContext.current
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Galeri launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             if (imageUris.size < 3) {
-                val inputStream = context.contentResolver.openInputStream(it)
-                inputStream?.use { stream ->
-                    val fileName = "${UUID.randomUUID()}.jpg"
-                    val file = File(context.filesDir, fileName)
-                    val outputStream = FileOutputStream(file)
-                    stream.copyTo(outputStream)
-                    outputStream.close()
-                    imageUris = imageUris + file.absolutePath
-                }
+                imageUris = imageUris + it.toString()
             }
+        }
+    }
+
+    // Kamera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && cameraImageUri != null) {
+            if (imageUris.size < 3) {
+                imageUris = imageUris + cameraImageUri.toString()
+            }
+        }
+    }
+
+    fun launchCamera() {
+        if (imageUris.size < 3) {
+            val fileName = "${UUID.randomUUID()}.jpg"
+            val file = File(context.filesDir, fileName)
+            val uri = FileProvider.getUriForFile(
+                context,
+                context.packageName + ".provider",
+                file
+            )
+            cameraImageUri = uri
+            cameraLauncher.launch(uri)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            launchCamera()
+        } else {
+            Toast.makeText(context, "Camera permission is required", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun checkAndLaunchCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchCamera()
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -98,13 +137,13 @@ fun NewItemSheet(
                         .background(color = androidx.compose.ui.graphics.Color.LightGray, shape = RoundedCornerShape(8.dp))
                         .border(1.dp, androidx.compose.ui.graphics.Color.Gray, RoundedCornerShape(8.dp))
                         .clickable {
-                            imagePickerLauncher.launch("image/*")
+                            showImageSourceDialog = true
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     if (index < imageUris.size) {
                         val imageUri = imageUris[index]
-                        val painter = rememberAsyncImagePainter(model = "file://$imageUri")
+                        val painter = rememberAsyncImagePainter(model = Uri.parse(imageUri))
                         Image(
                             painter = painter,
                             contentDescription = "Selected image",
@@ -117,6 +156,26 @@ fun NewItemSheet(
                     }
                 }
             }
+        }
+
+        if (showImageSourceDialog) {
+            AlertDialog(
+                onDismissRequest = { showImageSourceDialog = false },
+                title = { Text("Select Photo Source") },
+                text = { Text("Where do you want to add the photo from?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showImageSourceDialog = false
+                        checkAndLaunchCamera()
+                    }) { Text("Camera") }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showImageSourceDialog = false
+                        imagePickerLauncher.launch("image/*")
+                    }) { Text("Gallery") }
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

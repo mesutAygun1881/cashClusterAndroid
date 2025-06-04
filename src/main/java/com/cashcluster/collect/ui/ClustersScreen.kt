@@ -32,6 +32,7 @@ import com.cashcluster.collect.data.CategoryStorage
 import kotlinx.coroutines.launch
 import com.cashcluster.collect.data.Item
 import com.cashcluster.collect.data.ItemStorage
+import android.net.Uri
 
 enum class CollectionCategory {
     Coins,
@@ -222,7 +223,7 @@ fun ClustersScreen() {
                                                         .fillMaxSize()
                                                 ) {
                                                     if (item.imageUris.isNotEmpty()) {
-                                                        val imagePainter = rememberAsyncImagePainter("file://${item.imageUris.first()}")
+                                                        val imagePainter = rememberAsyncImagePainter(model = Uri.parse(item.imageUris.first()))
                                                         Image(
                                                             painter = imagePainter,
                                                             contentDescription = item.name,

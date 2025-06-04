@@ -26,6 +26,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import coil.compose.rememberAsyncImagePainter
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import android.util.Log
+import android.widget.Toast
+import android.net.Uri
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterScreen() {
@@ -37,7 +43,7 @@ fun FilterScreen() {
 
     var expandedCategories by remember { mutableStateOf(setOf<String>()) }
     var selectedCategories by remember { mutableStateOf(setOf<String>()) }
-    var selectedParams by remember { mutableStateOf(mutableMapOf<String, MutableSet<String>>()) }
+    var selectedParams by remember { mutableStateOf(mutableMapOf<Pair<String, String>, MutableSet<String>>()) }
 
     // Filtrelenmiş sonuçlar için state
     var filteredItems by remember { mutableStateOf<List<Item>?>(null) }
@@ -136,16 +142,17 @@ fun FilterScreen() {
                                     .padding(start = 32.dp, top = 8.dp)
                             )
                             values.forEach { value ->
-                                val checked = selectedParams[category.name]?.contains(value) == true
+                                val checked = selectedParams[category.name to param]?.contains(value) == true
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
                                             val newMap = selectedParams.toMutableMap()
-                                            val oldSet = newMap[category.name]?.toMutableSet() ?: mutableSetOf()
+                                            val key = category.name to param
+                                            val oldSet = newMap[key]?.toMutableSet() ?: mutableSetOf()
                                             if (checked) oldSet.remove(value) else oldSet.add(value)
-                                            newMap[category.name] = oldSet
+                                            newMap[key] = oldSet
                                             selectedParams = newMap
                                         }
                                         .padding(start = 48.dp, top = 4.dp, bottom = 4.dp)
@@ -154,9 +161,10 @@ fun FilterScreen() {
                                         checked = checked,
                                         onCheckedChange = {
                                             val newMap = selectedParams.toMutableMap()
-                                            val oldSet = newMap[category.name]?.toMutableSet() ?: mutableSetOf()
+                                            val key = category.name to param
+                                            val oldSet = newMap[key]?.toMutableSet() ?: mutableSetOf()
                                             if (it) oldSet.add(value) else oldSet.remove(value)
-                                            newMap[category.name] = oldSet
+                                            newMap[key] = oldSet
                                             selectedParams = newMap
                                         }
                                     )
@@ -184,20 +192,37 @@ fun FilterScreen() {
             }
             Button(
                 onClick = {
-                    // Filtrele ve sheet aç
-                    val filtered = items.filter { item ->
-                        selectedCategories.contains(item.categoryName) &&
-                        (selectedParams[item.categoryName]?.all { paramValue ->
-                            paramValue in listOfNotNull(
-                                item.name,
-                                item.yearOfFoundation,
-                                item.collection,
-                                item.country
-                            ) + (item.customFields.values)
-                        } ?: true)
+                    try {
+                        Log.d("FilterScreen", "Filter started")
+                        val filtered = items.filter { item ->
+                            Log.d("FilterScreen", "Filtering item: ${item.name}")
+                            val categoryParams = selectedParams.filterKeys { it.first == item.categoryName }
+                            Log.d("FilterScreen", "CategoryParams: $categoryParams")
+                            val result = selectedCategories.contains(item.categoryName) &&
+                                (
+                                    categoryParams.isEmpty() ||
+                                    categoryParams.all { (key, values) ->
+                                        val (_, field) = key
+                                        val itemValue = when (field) {
+                                            "Name" -> item.name
+                                            "Year of foundation" -> item.yearOfFoundation
+                                            "Collection" -> item.collection
+                                            "Country" -> item.country
+                                            else -> item.customFields[field]
+                                        }
+                                        values.isEmpty() || values.contains(itemValue)
+                                    }
+                                )
+                            Log.d("FilterScreen", "Result for item ${item.name}: $result")
+                            result
+                        }
+                        filteredItems = filtered
+                        showResultSheet = true
+                        Log.d("FilterScreen", "Filter finished, found: ${filtered.size}")
+                    } catch (e: Exception) {
+                        Log.e("FilterScreen", "Filter crash: ${e.message}", e)
+                        Toast.makeText(context, "Filter error: ${e.message}", Toast.LENGTH_LONG).show()
                     }
-                    filteredItems = filtered
-                    showResultSheet = true
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D3D98))
             ) {
@@ -225,55 +250,42 @@ fun FilterScreen() {
                 if (filteredItems!!.isEmpty()) {
                     Text("No items found.")
                 } else {
-                    // ClusterScreen'deki gibi grid
-                    LazyColumn {
-                        items(filteredItems!!.chunked(2)) { rowItems ->
-                            Row(
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxHeight(0.7f)
+                    ) {
+                        items(filteredItems!!) { item ->
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    .padding(vertical = 4.dp)
+                                    .clickable { selectedItem = item },
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
                             ) {
-                                rowItems.forEach { item ->
-                                    Card(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .aspectRatio(1f)
-                                            .clickable { selectedItem = item },
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize()
-                                        ) {
-                                            if (item.imageUris.isNotEmpty()) {
-                                                val imagePainter = rememberAsyncImagePainter("file://${item.imageUris.first()}")
-                                                Image(
-                                                    painter = imagePainter,
-                                                    contentDescription = item.name,
-                                                    modifier = Modifier
-                                                        .fillMaxSize()
-                                                        .clip(RoundedCornerShape(8.dp)),
-                                                    contentScale = ContentScale.Crop
-                                                )
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .align(Alignment.BottomStart)
-                                                    .background(Color(0xAA000000))
-                                                    .padding(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = item.name,
-                                                    color = Color.White,
-                                                    style = MaterialTheme.typography.bodyMedium
-                                                )
-                                            }
-                                        }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(8.dp)
+                                ) {
+                                    if (item.imageUris.isNotEmpty()) {
+                                        val imagePainter = rememberAsyncImagePainter(model = Uri.parse(item.imageUris.first()))
+                                        Image(
+                                            painter = imagePainter,
+                                            contentDescription = item.name,
+                                            modifier = Modifier
+                                                .size(64.dp)
+                                                .clip(RoundedCornerShape(8.dp)),
+                                            contentScale = ContentScale.Crop
+                                        )
                                     }
-                                }
-                                if (rowItems.size < 2) {
-                                    Spacer(modifier = Modifier.weight(1f))
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = item.name,
+                                            color = Color.Black,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        // Show more info if needed
+                                    }
                                 }
                             }
                         }

@@ -30,6 +30,8 @@ import com.cashcluster.collect.data.ImageStorage
 import com.cashcluster.collect.data.Item
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
+import coil.compose.rememberAsyncImagePainter
+import android.net.Uri
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemDetailSheet(
@@ -109,17 +111,15 @@ fun ItemDetailSheet(
                         .padding(bottom = 16.dp)
                 ) {
                     items(item.imageUris) { imagePath ->
-                        val bitmap = imageStorage.loadImage(imagePath)
-                        bitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Item image",
-                                modifier = Modifier
-                                    .size(200.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                        val painter = rememberAsyncImagePainter(model = Uri.parse(imagePath))
+                        Image(
+                            painter = painter,
+                            contentDescription = "Item image",
+                            modifier = Modifier
+                                .size(200.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
             }
